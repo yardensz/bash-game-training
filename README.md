@@ -60,3 +60,22 @@ Supported options are documented in the in-app reference. Every lesson starts
 from the same clean fixture so previous experiments cannot block progression.
 
 Deploys as static files through the repository's existing GitHub Pages setup.
+
+## Mission Control update
+
+The desktop interface fits a single viewport (1000px+ wide). The numbered
+mission map, objective, terminal input, XP, and reward bar remain visible;
+long explanations and terminal history scroll inside their panels. Mobile
+layouts stack naturally. Each objective includes explicit steps and a visible
+success condition.
+
+Successful commands immediately open the next mission and keep keyboard focus
+in the terminal. The reward bar preserves the last completion and the terminal
+keeps its final output. Every six missions restores a station system and unlocks
+a badge. Each mission awards XP only once. Stars: 3 for independent completion,
+2 with a hint, 1 with the solution. Errors never penalize the learner; replaying
+can improve the saved star rating.
+
+Keyboard: Enter runs commands, Up/Down browse history, F1 shows a hint, F2 opens
+the guide, F3 opens files, Escape closes dialogs/returns focus, Alt+Left/Right
+visits unlocked missions, and Alt+R restarts the current workspace.
