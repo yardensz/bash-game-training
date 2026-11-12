@@ -72,7 +72,7 @@ export class Shell {
     const flagless=()=>{if(args.some(a=>a.startsWith('-')))throw Error(`${cmd}: this option is not supported in the simulator`);};
     switch(cmd){
       case 'pwd':exact(0);return this.cwd+'\n';
-      case 'cd':if(args.length>1)throw Error('cd: too many arguments');{const p=this.path(args[0]);if(this.fs.get(p)!==null)throw Error(`${args[0]}: Not a directory`);this.cwd=p;return '';}
+      case 'cd':if(args.length>1)throw Error('cd: too many arguments');{const p=this.path(args[0]);if(!this.fs.has(p))throw Error(`cd: ${args[0]}: No such file or directory`);if(this.fs.get(p)!==null)throw Error(`${args[0]}: Not a directory`);this.cwd=p;return '';}
       case 'ls':{
         const flags=args.filter(a=>a.startsWith('-'));if(flags.some(f=>!/^-[al]+$/.test(f)))throw Error('ls: supported options: -a, -l, -la');
         const targets=args.filter(a=>!a.startsWith('-'));if(targets.length>1)throw Error('ls: one directory at a time in this simulator');

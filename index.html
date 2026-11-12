@@ -1,23 +1,133 @@
 <!doctype html>
 <html lang="en" dir="ltr">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101918"><meta name="description" content="Restore a space station through 24 hands-on Bash missions. Learn, experiment, and unlock your next skill."><title>Bash Quest — Mission Control</title><link rel="stylesheet" href="style.css?v=2.1"></head>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070d14">
+<meta name="description" content="Restore a space station through 24 hands-on Bash missions. Learn, experiment, and unlock your next skill.">
+<title>Bash Quest — Station Recovery</title>
+<link rel="stylesheet" href="style.css?v=3.1">
+</head>
 <body>
-<header><a class="brand" href="./"><span class="logo">&gt;_</span><b>BASH<span>QUEST</span></b></a><span class="header-note">STATION RECOVERY / LEARN BY DOING</span><div class="header-actions"><button id="reference" title="F2">Command guide <kbd>F2</kbd></button><button id="theme" aria-label="Toggle color theme">◐</button></div></header>
-<main>
-<section class="status-bar" aria-label="Your progress"><div><span class="eyebrow">RESTORE THE STATION</span><h1>One command closer.</h1></div><div class="stats"><span><b id="completed">0 / 24</b> missions</span><span><b id="xp">0 XP</b></span><span id="rank">New explorer</span></div><div class="progress-track"><span id="progress"></span></div></section>
-<div class="workspace">
-<aside class="map"><div class="section-heading"><h2>Mission map</h2><span>01—24</span></div><div id="chapters"></div><div class="map-footer"><b id="badges">0 / 4 badges unlocked</b><span>Every six missions restores a system.</span><button id="resetProgress">Reset progress</button></div></aside>
-<section class="game">
-<nav class="tabs" aria-label="Game modes"><button id="learnTab" class="selected">Missions</button><button id="freeTab">Playground</button><span id="saved">Progress saved on this device</span></nav>
-<div class="play-grid">
-<article class="lesson-card"><div class="lesson-top"><span id="lessonBadge" class="badge"></span><span id="lessonCount"></span></div><h2 id="lessonTitle"></h2><p id="story"></p><div class="lesson-scroll"><div class="mission"><h3>Your objective</h3><ol id="steps"></ol><div class="target"><b>Success looks like</b><p id="task"></p></div></div><details id="learnMore" open><summary>How it works</summary><p id="concept"></p><span class="example-label">SYNTAX EXAMPLE — use the target from your objective</span><pre id="example"></pre></details><div id="hintText" class="hint-text" hidden></div></div><div class="lesson-actions"><button id="hint">Hint <kbd>F1</kbd></button><button id="solution">Solution</button><button id="resetLevel" title="Alt+R">↻ Restart</button></div></article>
-<div class="console-column"><section class="terminal" aria-label="Practice terminal"><div class="terminal-bar"><div class="window-dots"><i></i><i></i><i></i></div><span id="terminalPath">student@bash-quest: ~</span><span class="sim-badge">SIMULATED</span></div><div id="output" class="terminal-output" role="log" aria-live="polite" aria-label="Terminal output"></div><form id="commandForm" autocomplete="off"><label for="command" id="prompt">~ $</label><input id="command" aria-label="Bash command" placeholder="Type a command and press Enter…" spellcheck="false" autocapitalize="off" autocomplete="off"><button type="submit" aria-label="Run command">↵</button></form><div class="terminal-footer"><span>Enter to run · ↑ ↓ history</span><button id="filesButton">Files <kbd>F3</kbd></button></div></section><div id="feedback" class="feedback" role="status">Your workspace is ready. Try your first command.</div><div class="keyboard-help"><span><kbd>Alt</kbd> + <kbd>←</kbd> / <kbd>→</kbd> revisit missions</span><span>Next mission starts automatically</span></div></div>
-</div>
-<div class="reward" id="reward" role="status" aria-live="polite"><span class="reward-icon" id="rewardIcon">✦</span><div><b id="rewardTitle">Your next skill is one command away.</b><p id="rewardText">Complete missions to earn XP and restore all four systems.</p></div><span id="rewardStars"></span></div>
-</section>
-</div>
+<div class="starfield" aria-hidden="true"></div>
+
+<header class="hud">
+  <a class="brand" href="./"><span class="logo">&gt;_</span><b>BASH<span>QUEST</span></b></a>
+  <div class="hud-stats" aria-label="Your progress">
+    <div class="level-box" title="Earn 50 XP per mission. Every 100 XP is a new level.">
+      <span class="level-badge"><small>LVL</small><b id="level">1</b></span>
+      <div class="xp-wrap">
+        <div class="xp-top"><span id="rank">New explorer</span><span id="xpText">0 / 100 XP</span></div>
+        <div class="xp-bar"><span id="xpFill"></span></div>
+      </div>
+    </div>
+    <div class="stat" title="Missions completed"><b id="completed">0/24</b><small>missions</small></div>
+    <div class="stat gold" title="Best star rating, summed over all missions"><b id="starsTotal">0</b><small>★ stars</small></div>
+    <div class="stat fire" title="Missions in a row solved without hints or solutions"><b id="streak">0</b><small>🔥 streak</small></div>
+    <div class="stat" title="A badge for every restored station system"><b id="badges">0/4</b><small>badges</small></div>
+  </div>
+  <div class="hud-actions">
+    <button id="reference" title="Command guide (F2)">📖 Guide <kbd>F2</kbd></button>
+    <button id="sound" aria-label="Toggle sound effects" title="Sound effects">🔊</button>
+    <button id="theme" aria-label="Toggle color theme" title="Light / dark">◐</button>
+  </div>
+</header>
+
+<main class="station">
+  <aside class="panel map" aria-label="Mission map">
+    <nav class="mode-switch" aria-label="Game modes">
+      <button id="learnTab" class="selected">🚀 Missions</button>
+      <button id="freeTab">🧪 Playground</button>
+    </nav>
+    <div id="chapters"></div>
+    <div class="map-footer">
+      <span id="saved">Progress saved on this device</span>
+      <button id="resetProgress">Reset progress</button>
+    </div>
+  </aside>
+
+  <article class="panel briefing" aria-label="Mission briefing">
+    <div class="brief-top">
+      <span id="lessonBadge" class="badge"></span>
+      <span id="lessonStars" class="mission-stars" title="Your best rating for this mission"></span>
+    </div>
+    <div class="brief-title">
+      <span id="lessonNumber" class="mission-number"></span>
+      <h1 id="lessonTitle"></h1>
+    </div>
+    <p id="story" class="story"></p>
+    <div class="lesson-scroll">
+      <section class="mission">
+        <h2>🎯 Objective</h2>
+        <ol id="steps"></ol>
+        <div class="target"><b>✅ Success looks like</b><p id="task"></p></div>
+      </section>
+      <details id="learnMore" open>
+        <summary>💡 How it works</summary>
+        <p id="concept"></p>
+        <span class="example-label">SYNTAX EXAMPLE — adapt it to your objective</span>
+        <pre id="example"></pre>
+      </details>
+      <div id="hintText" class="hint-text" hidden></div>
+    </div>
+    <div class="lesson-actions">
+      <button id="hint" title="Hint (F1) — max 2 stars">💡 Hint <kbd>F1</kbd></button>
+      <button id="solution" title="Show solution — max 1 star">🔑 Solution</button>
+      <button id="resetLevel" title="Restart workspace (Alt+R)">↻ Restart</button>
+    </div>
+  </article>
+
+  <section class="console-col" aria-label="Terminal">
+    <div class="terminal" id="terminal">
+      <div class="terminal-bar">
+        <div class="window-dots"><i></i><i></i><i></i></div>
+        <span id="terminalPath">student@bash-quest: ~</span>
+        <span class="sim-badge">SIMULATED</span>
+      </div>
+      <div id="output" class="terminal-output" role="log" aria-live="polite" aria-label="Terminal output"></div>
+      <form id="commandForm" autocomplete="off">
+        <label for="command" id="prompt">~ $</label>
+        <input id="command" aria-label="Bash command" placeholder="Type a command, press Enter…" spellcheck="false" autocapitalize="off" autocomplete="off">
+        <button type="submit" aria-label="Run command">⏎</button>
+      </form>
+      <div class="terminal-footer">
+        <span><kbd>Enter</kbd> run · <kbd>Tab</kbd> complete · <kbd>↑</kbd><kbd>↓</kbd> history · <kbd>Ctrl</kbd>+<kbd>L</kbd> clear</span>
+        <span><kbd>Alt</kbd>+<kbd>←</kbd><kbd>→</kbd> missions</span>
+      </div>
+      <div id="toast" class="toast" role="status" aria-live="polite">
+        <span class="toast-icon" id="toastIcon">✓</span>
+        <div><b id="toastTitle"></b><p id="toastText"></p></div>
+        <span class="toast-stars" id="toastStars"></span>
+      </div>
+    </div>
+    <div id="feedback" class="feedback" role="status">Your workspace is ready. Try your first command.</div>
+  </section>
+
+  <aside class="panel tree-panel" aria-label="Station map: your folders and files">
+    <div class="panel-head">
+      <h2>🗺️ Station map</h2>
+      <label class="toggle" title="Show files whose names start with a dot"><input type="checkbox" id="showHidden"> hidden</label>
+    </div>
+    <div class="you-are-here">
+      <small>📍 YOU ARE HERE</small>
+      <code id="cwdPath">/home/student</code>
+      <nav id="breadcrumbs" aria-label="Current directory path"></nav>
+    </div>
+    <div id="tree" class="tree"></div>
+    <div id="treeChanges" class="tree-changes" aria-live="polite"></div>
+    <p class="tree-legend">Click a folder or file to type its path · last command: <span class="lg-add">new</span> <span class="lg-mod">changed</span></p>
+  </aside>
 </main>
-<dialog id="guide"><div class="dialog-heading"><h2>Command guide</h2><button id="closeGuide" aria-label="Close command guide">✕</button></div><p>A safe simulation of Bash fundamentals, not a full shell. No scripts, loops, glob patterns, or full variable expansion. Nothing runs on your computer.</p><input id="search" placeholder="Search commands…" aria-label="Search the guide"><div id="guideList"></div></dialog>
-<dialog id="filesDialog"><div class="dialog-heading"><h2>Your workspace</h2><button id="closeFiles" aria-label="Close files">✕</button></div><p>Fresh files for each mission. Use cat to read a file in the terminal.</p><pre id="fileTree"></pre></dialog>
-<script type="module" src="app.js?v=2.1"></script>
-</body></html>
+
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<dialog id="guide">
+  <div class="dialog-heading"><h2>📖 Command guide</h2><button id="closeGuide" aria-label="Close command guide">✕</button></div>
+  <p>A safe simulation of Bash fundamentals, not a full shell. No scripts, loops, glob patterns, or full variable expansion. Nothing runs on your computer.</p>
+  <input id="search" placeholder="Search commands…" aria-label="Search the guide">
+  <div id="guideList"></div>
+</dialog>
+
+<script type="module" src="app.js?v=3.1"></script>
+</body>
+</html>

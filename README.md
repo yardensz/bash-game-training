@@ -12,8 +12,9 @@ An interactive game for learning Bash fundamentals from scratch.
   change simulated state; no code runs on the visitor's computer.
 - Pipes, output redirection, simple variables, single/double quoting,
   relative/absolute paths, and basic file/text commands.
-- Free practice, searchable command reference, command history, filesystem
-  inspector, light/dark themes, responsive English LTR interface.
+- Free practice, searchable command reference, command history, Tab
+  completion, a live always-visible filesystem map, light/dark themes,
+  sound effects, responsive English LTR interface.
 - Completed lessons and current lesson persist in localStorage on the same
   browser. Lesson files reset when changing/restarting a lesson; XP is awarded
   only once per lesson. No login, analytics, or backend.
@@ -61,21 +62,38 @@ from the same clean fixture so previous experiments cannot block progression.
 
 Deploys as static files through the repository's existing GitHub Pages setup.
 
-## Mission Control update
+## Station console interface (v3)
 
-The desktop interface fits a single viewport (1000px+ wide). The numbered
-mission map, objective, terminal input, XP, and reward bar remain visible;
-long explanations and terminal history scroll inside their panels. Mobile
-layouts stack naturally. Each objective includes explicit steps and a visible
-success condition.
+The desktop interface fits a single viewport (1000px+ wide) as a sci-fi station
+console with four always-visible panels:
 
-Successful commands immediately open the next mission and keep keyboard focus
-in the terminal. The reward bar preserves the last completion and the terminal
-keeps its final output. Every six missions restores a station system and unlocks
-a badge. Each mission awards XP only once. Stars: 3 for independent completion,
-2 with a hint, 1 with the solution. Errors never penalize the learner; replaying
-can improve the saved star rating.
+- **Mission map** — four station systems, each a path of six mission nodes with
+  the best star rating earned. Locked missions are dashed.
+- **Mission briefing** — mission number, typed-out story line, numbered
+  objective steps, a visible success condition, and a collapsible explanation.
+- **Terminal** — CRT-style simulated shell. Successful missions trigger a
+  "Mission complete" banner, confetti, and sound; errors shake the terminal.
+- **Station map** — a live `tree`-style view of the whole simulated filesystem
+  from `/`. A "YOU ARE HERE" marker and breadcrumb show the current directory;
+  the path from `/` to it is highlighted. Files created or changed by the last
+  command are tagged NEW / EDIT, and removals are listed below the tree.
+  Hidden dot-files appear after `ls -a` or with the "hidden" toggle. Clicking a
+  file or folder types its path (relative to the current directory) into the
+  command line; clicking a breadcrumb types the matching `cd` command.
 
-Keyboard: Enter runs commands, Up/Down browse history, F1 shows a hint, F2 opens
-the guide, F3 opens files, Escape closes dialogs/returns focus, Alt+Left/Right
-visits unlocked missions, and Alt+R restarts the current workspace.
+The heads-up display shows level (every 100 XP), XP bar, rank, total stars, a
+no-help streak, and badges. Each mission awards 50 XP only once. Stars: 3 for
+independent completion, 2 with a hint, 1 with the solution. Errors never
+penalize the learner; replaying can improve the saved star rating. Every six
+missions restores a station system and unlocks a badge. Successful commands
+immediately open the next mission and keep keyboard focus in the terminal.
+
+Dark theme is the default; light theme and sound effects can be toggled in the
+header (both remembered on the device). Animations respect
+`prefers-reduced-motion`. On tablets the mission map becomes a top strip; on
+phones the panels stack (briefing, terminal, station map, mission map).
+
+Keyboard: Enter runs commands, Tab completes commands, files, and folders,
+Up/Down browse history, Ctrl+L clears the screen, F1 shows a hint, F2 opens the
+guide, Escape closes dialogs/returns focus, Alt+Left/Right visits unlocked
+missions, and Alt+R restarts the current workspace.
