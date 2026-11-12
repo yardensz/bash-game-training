@@ -18,7 +18,7 @@ export const missionDetails = [
   {steps:['Use wc with the -l flag to count lines in missions/crew.txt.'],target:'The output shows 4 followed by the filename.'},
   {steps:['Use head with -n to show exactly the first 2 lines of missions/log.txt.'],target:'INFO launch ready, then ERROR antenna offline.'},
   {steps:['Filter missions/log.txt for ERROR using grep.','In the SAME command, pipe that output into wc -l. Do not give wc a filename.'],target:'The terminal prints only the number 2.'},
-  {steps:['Sort the names in missions/crew.txt.','In the SAME command, pipe the sorted output into uniq.'],target:'Three lines, in order: Maya, Noam, Yarden. Each name appears once.'},
+  {steps:['Use sort to order the names in missions/crew.txt.','In the SAME command, pipe the sorted output into uniq.'],target:'Three lines, in order: Maya, Noam, Yarden. Each name appears once.'},
   {steps:['Filter missions/log.txt for ERROR.','Redirect the result into report.txt in your home directory.'],target:'report.txt contains the two ERROR lines. No INFO lines and no count.'},
   {steps:['Assign the exact value Yarden to a variable named pilot. No spaces around =.','Use echo and $pilot to print the stored value.'],target:'The variable pilot holds Yarden, and the terminal prints Yarden.'},
   {steps:['Use echo to print the literal text $HOME. Protect it from variable expansion with single quotes.'],target:'Exactly $HOME appears, including the dollar sign — not /home/student.'},

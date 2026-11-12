@@ -69,8 +69,11 @@ console with four always-visible panels:
 
 - **Mission map** — four station systems, each a path of six mission nodes with
   the best star rating earned. Locked missions are dashed.
-- **Mission briefing** — mission number, typed-out story line, numbered
-  objective steps, a visible success condition, and a collapsible explanation.
+- **Mission briefing** — mission number, typed-out story line, a "Commands this
+  mission" strip listing the commands the mission needs, numbered objective
+  steps, a visible success condition, and a collapsible explanation. Commands
+  (`ls`, `pwd`, …) appear as green code chips wherever they are mentioned;
+  flags, operators, and variables (`-a`, `|`, `>`, `$HOME`) appear as blue chips.
 - **Terminal** — CRT-style simulated shell. Successful missions trigger a
   "Mission complete" banner, confetti, and sound; errors shake the terminal.
 - **Station map** — a live `tree`-style view of the whole simulated filesystem

@@ -115,8 +115,14 @@ pre{font:12px/1.7 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
 #example{background:var(--terminal);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:5px 0;color:#5cf2a0}
 #example::before{content:'$ ';color:#4cc9f0}
 .hint-text{background:#ffd16614;border:1px solid #ffd16655;padding:10px 12px;font-size:13px;line-height:1.6;border-radius:9px;margin-top:12px;white-space:pre-wrap;animation:slide-in .3s ease-out}
-.hint-text code{display:block;margin-top:6px;white-space:pre-wrap;font:12px var(--mono);color:var(--accent);background:var(--terminal);padding:8px 10px;border-radius:6px}
+.hint-text code.solution{display:block;margin-top:6px;white-space:pre-wrap;font:12px var(--mono);color:var(--accent);background:var(--terminal);padding:8px 10px;border-radius:6px}
 @keyframes slide-in{from{opacity:0;transform:translateY(6px)}}
+code.cmd,code.tok{font:600 .92em var(--mono);padding:1px 6px;border-radius:5px;white-space:nowrap}
+code.cmd{color:#04121a;background:var(--accent);box-shadow:0 0 10px #5cf2a044}
+code.tok{color:var(--cyan);background:var(--cyan-dim);border:1px solid #4cc9f044}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 10px;font-size:11px;color:var(--muted)}
+#toolList{display:flex;flex-wrap:wrap;gap:6px}
+#toolList code{font-size:13px;padding:3px 9px}
 .lesson-actions{display:flex;gap:6px;padding-top:12px;flex-shrink:0;border-top:1px solid var(--line);margin-top:8px}
 .lesson-actions button{font-size:12px}
 .lesson-actions button:last-child{margin-left:auto}

@@ -30,6 +30,26 @@ const tilde=p=>p===HOME?'~':p.startsWith(HOME+'/')?'~'+p.slice(HOME.length):p;
 const starText=n=>'★'.repeat(n)+'☆'.repeat(3-n);
 const focusCommand=()=>$('command').focus({preventScroll:true});
 
+// Commands, flags, operators, and variables inside mission text render as code chips.
+const TOKEN=new RegExp(`(?<![\\w./-])(${COMMANDS.join('|')})(?![\\w./-])|(?<![\\w-])(-[a-z]{1,2})(?![\\w-])|(\\$[A-Za-z_]\\w*)|(>>|>|\\||(?<!\\.)\\.\\.(?!\\.)|(?<![\\w/])~(?![\\w]))`,'g');
+function richText(el,text){
+  el.replaceChildren();let last=0;
+  for(const m of text.matchAll(TOKEN)){
+    if(m.index>last)el.append(text.slice(last,m.index));
+    const code=document.createElement('code');code.className=m[1]?'cmd':'tok';code.textContent=m[0];el.append(code);
+    last=m.index+m[0].length;
+  }
+  if(last<text.length)el.append(text.slice(last));
+}
+function missionTools(lesson){
+  const found=[];
+  for(const line of lesson.solution)for(const word of line.match(/"[^"]*"|'[^']*'|\S+/g)||[]){
+    const tool=COMMANDS.includes(word)?word:['|','>','>>'].includes(word)?word:/^[A-Za-z_]\w*=/.test(word)?'name=value':null;
+    if(tool&&!found.includes(tool))found.push(tool);
+  }
+  return found;
+}
+
 function save(){
   try{localStorage.setItem(KEY,JSON.stringify({completed:[...completed],active,stars,streak,bestStreak}));}
   catch{$('saved').textContent='Saving unavailable — progress is temporary';}
@@ -234,11 +254,13 @@ function start({boot=false}={}){
   $('lessonNumber').textContent=free?'∞':pad(active+1);
   $('lessonTitle').textContent=free?'Playground':l.title;
   typeStory(free?'> Sandbox online. Try an idea and watch what changes.':`> ${sectors[l.chapter].story} ${completed.has(active)?'[replay]':`[+${XP_PER} XP]`}`);
-  $('concept').textContent=free?'Use the command guide (F2) to explore supported commands. Files here are simulated and reset when you leave this workspace.':l.concept;
+  richText($('concept'),free?'Use the command guide (F2) to explore supported commands. Files here are simulated and reset when you leave this workspace.':l.concept);
   $('example').textContent=free?'help':l.example;
-  $('task').textContent=free?'There is no required result. Try building your own folder structure and watch the station map.':d.target;
+  richText($('task'),free?'There is no required result. Try building your own folder structure and watch the station map.':d.target);
   $('steps').replaceChildren();
-  (free?['Type any supported command — try help.','Click a folder in the station map to type its path.']:d.steps).forEach(text=>{const li=document.createElement('li');li.textContent=text;$('steps').append(li);});
+  (free?['Type any supported command — try help.','Click a folder in the station map to type its path.']:d.steps).forEach(text=>{const li=document.createElement('li');const span=document.createElement('span');richText(span,text);li.append(span);$('steps').append(li);});
+  $('tools').hidden=free;
+  if(!free){const list=$('toolList');list.replaceChildren();for(const t of missionTools(l)){const code=document.createElement('code');code.className=COMMANDS.includes(t)?'cmd':'tok';code.textContent=t;list.append(code);}}
   $('hint').hidden=free;$('solution').hidden=free;
   $('learnMore').open=window.innerHeight>=820||window.innerWidth<1000;
   document.querySelector('.lesson-scroll').scrollTop=0;
@@ -345,12 +367,12 @@ $('command').addEventListener('keydown',e=>{
 });
 
 /* ---------- Help & controls ---------- */
-function showHint(){if(free)return;assisted=true;$('hintText').hidden=false;$('hintText').textContent='💡 '+lessons[active].hint;$('hintText').scrollIntoView({block:'nearest'});focusCommand();}
+function showHint(){if(free)return;assisted=true;$('hintText').hidden=false;richText($('hintText'),'💡 '+lessons[active].hint);$('hintText').scrollIntoView({block:'nearest'});focusCommand();}
 $('hint').onclick=showHint;
 $('solution').onclick=()=>{
   solutionUsed=true;const box=$('hintText');box.hidden=false;
   box.replaceChildren(document.createTextNode('🔑 Run one command per line. Guided completion earns 1 star; replay independently to earn 3.'));
-  const code=document.createElement('code');code.textContent=lessons[active].solution.join('\n');box.append(code);
+  const code=document.createElement('code');code.className='solution';code.textContent=lessons[active].solution.join('\n');box.append(code);
   box.scrollIntoView({block:'nearest'});focusCommand();
 };
 $('resetLevel').onclick=()=>start();
