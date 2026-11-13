@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#070d14">
-<meta name="description" content="Restore a space station through 24 hands-on Bash missions. Learn, experiment, and unlock your next skill.">
+<meta name="description" content="Restore a space station through 48 hands-on Bash missions. Learn, experiment, and unlock your next skill.">
 <title>Bash Quest — Station Recovery</title>
-<link rel="stylesheet" href="style.css?v=3.2">
+<link rel="stylesheet" href="style.css?v=4.2">
 </head>
 <body>
 <div class="starfield" aria-hidden="true"></div>
@@ -21,7 +21,7 @@
         <div class="xp-bar"><span id="xpFill"></span></div>
       </div>
     </div>
-    <div class="stat" title="Missions completed"><b id="completed">0/24</b><small>missions</small></div>
+    <div class="stat" title="Missions completed"><b id="completed">0/48</b><small>missions</small></div>
     <div class="stat gold" title="Best star rating, summed over all missions"><b id="starsTotal">0</b><small>★ stars</small></div>
     <div class="stat fire" title="Missions in a row solved without hints or solutions"><b id="streak">0</b><small>🔥 streak</small></div>
     <div class="stat" title="A badge for every restored station system"><b id="badges">0/4</b><small>badges</small></div>
@@ -29,6 +29,7 @@
   <div class="hud-actions">
     <button id="reference" title="Command guide (F2)">📖 Guide <kbd>F2</kbd></button>
     <button id="sound" aria-label="Toggle sound effects" title="Sound effects">🔊</button>
+    <button id="calm" aria-label="Toggle calm mode (no animations)">✨</button>
     <button id="theme" aria-label="Toggle color theme" title="Light / dark">◐</button>
   </div>
 </header>
@@ -129,6 +130,6 @@
   <div id="guideList"></div>
 </dialog>
 
-<script type="module" src="app.js?v=3.2"></script>
+<script type="module" src="app.js?v=4.2"></script>
 </body>
 </html>

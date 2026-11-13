@@ -1,6 +1,6 @@
 // An intentionally bounded teaching simulator, never a host shell.
 export const HOME = '/home/student';
-export const COMMANDS = ['pwd','ls','cd','cat','mkdir','touch','cp','mv','rm','echo','grep','wc','head','tail','sort','uniq','clear','help'];
+export const COMMANDS = ['pwd','ls','cd','cat','mkdir','rmdir','touch','cp','mv','rm','echo','grep','wc','head','tail','sort','uniq','clear','help'];
 export class Shell {
   constructor() {
     this.cwd = HOME;
@@ -11,7 +11,8 @@ export class Shell {
       [HOME+'/.secret','The hidden door is open.\n'],
       [HOME+'/missions/crew.txt','Maya\nNoam\nMaya\nYarden\n'],
       [HOME+'/missions/log.txt','INFO launch ready\nERROR antenna offline\nINFO fuel ready\nERROR signal lost\n'],
-      [HOME+'/missions/notes.txt','learn\npractice\nrepeat\n']]);
+      [HOME+'/missions/notes.txt','learn\npractice\nrepeat\n'],
+      [HOME+'/missions/signals.txt','alpha OK\nBeta warning\nWARNING gamma\nwarning delta\nepsilon ok\n']]);
   }
   path(p='~') {
     if(p==='~'||p.startsWith('~/')) p=HOME+p.slice(1);
@@ -52,7 +53,7 @@ export class Shell {
       const ts=this.tokens(line);
       if(ts.some(t=>t.op&&!['|','>','>>'].includes(t.v)))throw Error('This operator is not supported in the simulator. Use one command per line, |, or >.');
       const segments=[[]];for(const t of ts){if(t.op&&t.v==='|')segments.push([]);else segments.at(-1).push(t);}
-      if(!ts.length)return {output:'',events,ok:true};
+      if(!ts.length)return {output:'',events,ok:true,line};
       if(segments.some(s=>!s.length))throw Error('Missing command before or after |.');
       for(let si=0;si<segments.length;si++){
         const s=segments[si];const ri=s.findIndex(t=>t.op);let redirect=null;
@@ -62,8 +63,8 @@ export class Shell {
         else {output=this.execute(cmd,args,si?output:null);events.push({cmd,args,cwd:this.cwd,output});}
         if(redirect){this.write(redirect.file,(redirect.mode==='>>'&&this.fs.has(this.path(redirect.file))?this.read(redirect.file):'')+output);events.push({cmd:redirect.mode,path:this.path(redirect.file)});output='';}
       }
-      return {output,events,ok:true,piped:segments.length>1};
-    }catch(e){return {output:e.message,events,ok:false};}
+      return {output,events,ok:true,piped:segments.length>1,line};
+    }catch(e){return {output:e.message,events,ok:false,line};}
   }
   execute(cmd,args,input){
     const exact=n=>{if(args.length!==n)throw Error(`${cmd}: expected ${n} argument(s)`);};
@@ -89,6 +90,16 @@ export class Shell {
           else {if(this.fs.get(this.parent(p))!==null)throw Error('parent directory does not exist');this.fs.set(p,null);}}
         return '';
       }
+      case 'rmdir':{
+        flagless();if(!args.length)throw Error('rmdir: missing directory');
+        for(const a of args){const p=this.path(a);
+          if(!this.fs.has(p))throw Error(`rmdir: ${a}: No such file or directory`);
+          if(this.fs.get(p)!==null)throw Error(`rmdir: ${a}: Not a directory`);
+          if(p==='/'||this.cwd===p||this.cwd.startsWith(p+'/'))throw Error(`rmdir: ${a}: cannot remove the directory you are in`);
+          if([...this.fs.keys()].some(k=>k!==p&&this.parent(k)===p))throw Error(`rmdir: ${a}: Directory not empty`);
+          this.fs.delete(p);}
+        return '';
+      }
       case 'touch':flagless();if(!args.length)throw Error('touch: missing file');for(const a of args)if(!this.fs.has(this.path(a)))this.write(a,'');return '';
       case 'cp':case 'mv':{
         flagless();exact(2);const source=this.path(args[0]);let dest=this.path(args[1]);const value=this.read(source);if(this.fs.get(dest)===null)dest+='/'+source.split('/').at(-1);if(source===dest)throw Error('source and destination are the same file');this.write(dest,value);if(cmd==='mv')this.fs.delete(source);return '';
@@ -96,14 +107,27 @@ export class Shell {
       case 'rm':flagless();if(!args.length)throw Error('rm: missing file');for(const a of args){this.read(a);this.fs.delete(this.path(a));}return '';
       case 'echo':if(args[0]?.startsWith('-'))throw Error('echo: options are not supported in this simulator');return args.join(' ')+'\n';
       case 'grep':{
-        const insensitive=args[0]==='-i';if(insensitive)args=args.slice(1);if(!args.length)throw Error('grep: missing pattern');if(args[0].startsWith('-'))throw Error('grep: supported option: -i');const pattern=args[0];
+        let flags='';while(args[0]?.startsWith('-')){if(!/^-[ivc]+$/.test(args[0]))throw Error('grep: supported options: -i, -v, -c');flags+=args[0].slice(1);args=args.slice(1);}
+        if(!args.length)throw Error('grep: missing pattern');const pattern=args[0];
         if(/[\\[\]{}()*+?^$|]/.test(pattern))throw Error('The simulator supports plain-text grep searches only, not regular expressions.');
-        const source=text(args.slice(1));return lines(source).filter(l=>insensitive?l.toLowerCase().includes(pattern.toLowerCase()):l.includes(pattern)).map(l=>l+'\n').join('');
+        const insensitive=flags.includes('i'),invert=flags.includes('v');
+        const match=l=>(insensitive?l.toLowerCase().includes(pattern.toLowerCase()):l.includes(pattern))!==invert;
+        const found=lines(text(args.slice(1))).filter(match);
+        return flags.includes('c')?found.length+'\n':found.map(l=>l+'\n').join('');
       }
-      case 'wc':if(args[0]!=='-l')throw Error('Use wc -l to count lines in this simulator.');{const files=args.slice(1);if(files.length>1)throw Error('wc: use one file at a time');const s=text(files);return String((s.match(/\n/g)||[]).length)+(files.length?' '+files[0]:'')+'\n';}
+      case 'wc':{
+        const flag=args[0];if(!['-l','-w'].includes(flag))throw Error('Use wc -l (lines) or wc -w (words) in this simulator.');
+        const files=args.slice(1);if(files.length>1)throw Error('wc: use one file at a time');const s=text(files);
+        const n=flag==='-l'?(s.match(/\n/g)||[]).length:s.split(/\s+/).filter(Boolean).length;
+        return String(n)+(files.length?' '+files[0]:'')+'\n';
+      }
       case 'head':case 'tail':{let n=10;if(args[0]==='-n'){if(!/^\d+$/.test(args[1]||''))throw Error('expected a nonnegative count after -n');n=Number(args[1]);args=args.slice(2);}if(args.some(a=>a.startsWith('-')))throw Error('supported option: -n');const ls=lines(text(args));return (cmd==='head'?ls.slice(0,n):n?ls.slice(-n):[]).map(l=>l+'\n').join('');}
-      case 'sort':flagless();return lines(text(args)).sort().map(l=>l+'\n').join('');
-      case 'uniq':flagless();return lines(text(args)).filter((l,i,ls)=>i===0||l!==ls[i-1]).map(l=>l+'\n').join('');
+      case 'sort':{const reverse=args[0]==='-r';if(reverse)args=args.slice(1);if(args.some(a=>a.startsWith('-')))throw Error('sort: supported option: -r');const sorted=lines(text(args)).sort();if(reverse)sorted.reverse();return sorted.map(l=>l+'\n').join('');}
+      case 'uniq':{
+        const count=args[0]==='-c';if(count)args=args.slice(1);if(args.some(a=>a.startsWith('-')))throw Error('uniq: supported option: -c');
+        const groups=[];for(const l of lines(text(args))){if(groups.length&&groups.at(-1).l===l)groups.at(-1).n++;else groups.push({l,n:1});}
+        return groups.map(g=>(count?String(g.n).padStart(7)+' ':'')+g.l+'\n').join('');
+      }
       case 'clear':exact(0);return '';
       case 'help':return COMMANDS.join('  ')+'\n';
       default:throw Error(`${cmd}: command not found\nCheck capitalization and spaces. Type help for supported commands.`);

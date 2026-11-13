@@ -23,11 +23,39 @@ export const missionDetails = [
   {steps:['Assign the exact value Yarden to a variable named pilot. No spaces around =.','Use echo and $pilot to print the stored value.'],target:'The variable pilot holds Yarden, and the terminal prints Yarden.'},
   {steps:['Use echo to print the literal text $HOME. Protect it from variable expansion with single quotes.'],target:'Exactly $HOME appears, including the dollar sign — not /home/student.'},
   {steps:['Move into the missions folder.','Use cd with ~ or "$HOME" to return to your home directory.'],target:'Finish in /home/student, after visiting missions.'},
-  {steps:['Create a directory named rescue in your home directory.','Save only the ERROR lines from missions/log.txt into rescue/errors.txt.','Count those saved lines and write only the number to rescue/count.txt.'],target:'rescue/errors.txt contains the two ERROR lines; rescue/count.txt contains 2.'}
+  {steps:['Create a directory named rescue in your home directory.','Save only the ERROR lines from missions/log.txt into rescue/errors.txt.','Count those saved lines and write only the number to rescue/count.txt.'],target:'rescue/errors.txt contains the two ERROR lines; rescue/count.txt contains 2.'},
+  {steps:['Use cd with the absolute path /home/student/missions.'],target:'Your prompt shows ~/missions, and the path you typed started with /.'},
+  {steps:['Stay in your home directory.','Use ls with missions as its argument.'],target:'The list shows crew.txt, log.txt, notes.txt, and signals.txt — and you are still in ~.'},
+  {steps:['Use mkdir with the -p flag to create labs/data/raw in one command.'],target:'The station map shows labs › data › raw, all created at once.'},
+  {steps:['Use ls with the -l flag in your home directory.'],target:'Each entry is on its own line; directories start with d, files with -.'},
+  {steps:['Move into the missions folder.','Use cat with ../welcome.txt to read the file in the parent directory.'],target:'The welcome message appears, and your prompt still shows ~/missions.'},
+  {steps:['Create a directory named temp.','Remove it using rmdir.'],target:'temp was created and is gone again from the station map.'},
+  {steps:['Use tail with -n 1 to show the last line of missions/log.txt.'],target:'Only one line: ERROR signal lost.'},
+  {steps:['Use grep with the -i flag to find warning in missions/signals.txt.'],target:'Three lines: Beta warning, WARNING gamma, warning delta.'},
+  {steps:['Use grep with the -v flag to hide every line containing INFO in missions/log.txt.'],target:'Only the two ERROR lines remain.'},
+  {steps:['Use grep with the -c flag to count ERROR lines in missions/log.txt. Do not use a pipe.'],target:'The terminal prints only the number 2.'},
+  {steps:['Use sort with the -r flag on missions/notes.txt.'],target:'Three lines, in order: repeat, practice, learn.'},
+  {steps:['Sort missions/crew.txt.','In the SAME command, pipe the result into uniq -c.'],target:'Each name once, with a count before it: 2 Maya, 1 Noam, 1 Yarden.'},
+  {steps:['Use cat with two files: missions/notes.txt, then missions/crew.txt.','Redirect the combined output into all.txt.'],target:'all.txt holds the three notes lines followed by the four crew lines.'},
+  {steps:['Use wc with the -w flag to count the words in welcome.txt.'],target:'The output shows 6 followed by the filename.'},
+  {steps:['Use head -n 3 on missions/log.txt.','In the SAME command, pipe into tail -n 1.'],target:'Only the third line appears: INFO fuel ready.'},
+  {steps:['Use sort -r on missions/crew.txt.','In the SAME command, pipe into head -n 1.'],target:'Only one name appears: Yarden.'},
+  {steps:['Use mv to move welcome.txt into the archive directory.'],target:'archive/welcome.txt exists and welcome.txt is gone from home.'},
+  {steps:['Use cp to copy missions/log.txt to archive/log-backup.txt.'],target:'archive/log-backup.txt has the log contents; the original log stays in missions.'},
+  {steps:['Assign missions to a variable named dir. No spaces around =.','Use cd with $dir to enter it.'],target:'Your prompt shows ~/missions, and the command you typed used $dir.'},
+  {steps:['Assign Maya to a variable named captain.','Use echo with "Captain $captain" and > to write captain.txt.'],target:'captain.txt contains one line: Captain Maya.'},
+  {steps:['Use echo with double quotes and $USER to print Hello and your username.'],target:'The terminal prints Hello student.'},
+  {steps:['Assign online to a variable named status.','Use echo with "antenna $status" and >> to append to missions/log.txt.'],target:'The log keeps its four lines and ends with: antenna online.'},
+  {steps:['In ONE command: sort missions/crew.txt, pipe into uniq, pipe into wc -l, and redirect into crew-count.txt.'],target:'crew-count.txt contains only the number 3.'},
+  {steps:['Create a directory named launch.','Save the ERROR lines of missions/log.txt into launch/errors.txt.','Save the sorted, de-duplicated crew names into launch/crew.txt.','Save the count of lines containing warning (any case) in missions/signals.txt into launch/warnings.txt.'],target:'errors.txt has 2 ERROR lines, crew.txt has Maya, Noam, Yarden, and warnings.txt contains 3.'}
 ];
 export const sectors = [
   {name:'Navigation',badge:'Pathfinder',story:'Bring the navigation console online.',icon:'⌖'},
   {name:'Storage',badge:'Builder',story:'Prepare the station’s storage systems.',icon:'▣'},
   {name:'Diagnostics',badge:'Investigator',story:'Find the faults and decode the logs.',icon:'⌕'},
-  {name:'Mission control',badge:'Bash explorer',story:'Restore communications and launch the rescue.',icon:'✦'}
+  {name:'Mission control',badge:'Bash explorer',story:'Restore communications with the fleet.',icon:'✦'},
+  {name:'Deep corridors',badge:'Navigator',story:'Chart the station’s deeper corridors.',icon:'⌬'},
+  {name:'Signal analysis',badge:'Signal decoder',story:'Decode the incoming transmissions.',icon:'≋'},
+  {name:'Data forge',badge:'Pipeline smith',story:'Forge raw data into useful reports.',icon:'⚒'},
+  {name:'Launch sequence',badge:'Bash commander',story:'Prepare the rescue ship for launch.',icon:'⏏'}
 ];

@@ -6,8 +6,9 @@ An interactive game for learning Bash fundamentals from scratch.
 
 ## Features
 
-- 24 sequential missions in four chapters, with explanations, examples,
-  optional hints, solutions, and a final multi-command challenge.
+- 48 sequential missions in eight station systems (chapters), with
+  explanations, examples, optional hints, solutions, a mid-game challenge
+  (mission 24), and a final multi-command launch mission (48).
 - In-memory filesystem and a bounded shell simulator. Commands actually
   change simulated state; no code runs on the visitor's computer.
 - Pipes, output redirection, simple variables, single/double quoting,
@@ -38,7 +39,7 @@ Node.js 20+:
 npm test
 ```
 
-The test suite solves all 24 lessons and checks filesystem mutations, quoting,
+The test suite solves all 48 lessons and checks filesystem mutations, quoting,
 variables, invalid input, and pipelines with newly generated content.
 
 ## Files
@@ -54,21 +55,24 @@ variables, invalid input, and pipelines with newly generated content.
 This is a **fundamentals course**, not full Bash emulation. No scripts, loops,
 conditionals, command substitution, glob expansion, full shell word splitting,
 input/stderr redirection, permissions enforcement, processes, networking,
-or arbitrary executable commands. `grep` supports plain text only; `ls -l`
+or arbitrary executable commands. `grep` supports plain text only (with `-i`,
+`-v`, `-c`); `ls -l`
 shows illustrative permissions, not full Unix metadata. File copy/move/remove
-support files, not recursive directories. `sort` uses simple character order.
+support files, not recursive directories; `rmdir` removes empty directories.
+`sort` uses simple character order.
 Supported options are documented in the in-app reference. Every lesson starts
 from the same clean fixture so previous experiments cannot block progression.
 
 Deploys as static files through the repository's existing GitHub Pages setup.
 
-## Station console interface (v3)
+## Station console interface (v4)
 
 The desktop interface fits a single viewport (1000px+ wide) as a sci-fi station
 console with four always-visible panels:
 
-- **Mission map** — four station systems, each a path of six mission nodes with
-  the best star rating earned. Locked missions are dashed.
+- **Mission map** — eight station systems, each a path of six mission nodes
+  with the best star rating earned. Locked systems collapse to one line, and
+  the current system scrolls into view automatically.
 - **Mission briefing** — mission number, typed-out story line, a "Commands this
   mission" strip listing the commands the mission needs, numbered objective
   steps, a visible success condition, and a collapsible explanation. Commands
@@ -91,10 +95,24 @@ penalize the learner; replaying can improve the saved star rating. Every six
 missions restores a station system and unlocks a badge. Successful commands
 immediately open the next mission and keep keyboard focus in the terminal.
 
-Dark theme is the default; light theme and sound effects can be toggled in the
-header (both remembered on the device). Animations respect
-`prefers-reduced-motion`. On tablets the mission map becomes a top strip; on
-phones the panels stack (briefing, terminal, station map, mission map).
+Dark theme is the default; light theme, sound effects, and calm mode can be
+toggled in the header (all remembered on the device). On tablets the mission
+map becomes a horizontally scrolling strip; on phones the panels stack
+(briefing, terminal, station map, mission map).
+
+### Performance
+
+The page is idle when nothing is happening: no infinite CSS animations, no
+`backdrop-filter`, no blend modes, and no always-on canvas. Attention effects
+(current-mission ring, "YOU" marker) run a few times and stop. The confetti
+canvas is created at capped resolution only while particles fly and is removed
+afterwards; the Web Audio context is suspended between sound effects. Calm
+mode (✨/🌙 button) and `prefers-reduced-motion` disable all animation and
+confetti.
+
+When changing any JS module or the stylesheet, bump the shared `?v=` query in
+`index.html` (CSS and `app.js`) and in the module imports of `app.js` and
+`lessons.js`, so returning visitors do not mix cached and new files.
 
 Keyboard: Enter runs commands, Tab completes commands, files, and folders,
 Up/Down browse history, Ctrl+L clears the screen, F1 shows a hint, F2 opens the

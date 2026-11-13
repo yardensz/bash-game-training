@@ -1,6 +1,6 @@
-import {Shell,HOME,COMMANDS} from './engine.js';
-import {lessons} from './lessons.js';
-import {missionDetails,sectors} from './mission-details.js';
+import {Shell,HOME,COMMANDS} from './engine.js?v=4.2';
+import {lessons} from './lessons.js?v=4.2';
+import {missionDetails,sectors} from './mission-details.js?v=4.2';
 
 const $=id=>document.getElementById(id);
 const KEY='bash-quest-progress-v1';
@@ -8,7 +8,7 @@ const TOTAL=lessons.length,XP_PER=50,XP_LEVEL=100;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let completed=new Set(),stars={},active=0,free=false,streak=0,bestStreak=0;
 let shell,history=[],commands=[],cursor=0,assisted=false,solutionUsed=false;
-let soundOn=true,storyTimer=0,toastTimer=0,userHidden=false;
+let soundOn=true,calm=false,storyTimer=0,toastTimer=0,userHidden=false;
 
 try{
   const data=JSON.parse(localStorage.getItem(KEY)||'{}');
@@ -19,6 +19,7 @@ try{
   bestStreak=Number.isInteger(data.bestStreak)?data.bestStreak:0;
   document.body.classList.toggle('light',localStorage.getItem('bash-quest-theme')==='light');
   soundOn=localStorage.getItem('bash-quest-sound')!=='off';
+  calm=localStorage.getItem('bash-quest-calm')==='on';
 }catch{$('saved').textContent='Local saving unavailable';}
 
 const unlocked=i=>i>=0&&i<TOTAL&&(i===0||completed.has(i-1)||completed.has(i));
@@ -56,7 +57,7 @@ function save(){
 }
 
 /* ---------- Sound (Web Audio, no assets) ---------- */
-let audio;
+let audio,audioIdle=0;
 function sound(name){
   if(!soundOn)return;
   const tunes={
@@ -68,28 +69,31 @@ function sound(name){
   };
   try{
     audio??=new (window.AudioContext||window.webkitAudioContext)();
-    const t0=audio.currentTime;
+    if(audio.state==='suspended')audio.resume();
+    const t0=audio.currentTime;let end=0;
     for(const [f,start,dur,type,vol] of tunes[name]){
       const o=audio.createOscillator(),g=audio.createGain();
       o.type=type;o.frequency.value=f;
       g.gain.setValueAtTime(vol,t0+start);g.gain.exponentialRampToValueAtTime(.0001,t0+start+dur);
-      o.connect(g).connect(audio.destination);o.start(t0+start);o.stop(t0+start+dur+.02);
+      o.connect(g).connect(audio.destination);o.start(t0+start);o.stop(t0+start+dur+.02);end=Math.max(end,start+dur);
     }
+    // An idle running AudioContext keeps the audio thread busy; suspend it between effects.
+    clearTimeout(audioIdle);audioIdle=setTimeout(()=>audio.suspend(),end*1000+400);
   }catch{}
 }
 
-/* ---------- Confetti ---------- */
+/* ---------- Confetti (canvas exists in layout only while particles fly) ---------- */
 const fx=$('fx'),ctx=fx.getContext('2d');let particles=[],fxRunning=false;
-function resizeFx(){const r=devicePixelRatio||1;fx.width=innerWidth*r;fx.height=innerHeight*r;ctx.setTransform(r,0,0,r,0,0);}
-addEventListener('resize',resizeFx);resizeFx();
+function resizeFx(){const r=Math.min(devicePixelRatio||1,1.5);fx.width=innerWidth*r;fx.height=innerHeight*r;ctx.setTransform(r,0,0,r,0,0);}
 function confetti(x,y,count=60,power=9){
-  if(reducedMotion)return;
+  if(reducedMotion||calm||document.hidden)return;
   const colors=['#5cf2a0','#4cc9f0','#ffd166','#ff6b7a','#c792ea','#ffffff'];
   for(let i=0;i<count;i++){
     const a=Math.random()*Math.PI*2,v=Math.random()*power+2;
     particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-power*.6,r:Math.random()*360,vr:(Math.random()-.5)*20,s:Math.random()*6+4,c:colors[i%colors.length],life:90+Math.random()*50});
   }
-  if(!fxRunning){fxRunning=true;requestAnimationFrame(tick);}
+  if(particles.length>300)particles.splice(0,particles.length-300);
+  if(!fxRunning){fxRunning=true;resizeFx();fx.classList.add('on');requestAnimationFrame(tick);}
 }
 function tick(){
   ctx.clearRect(0,0,innerWidth,innerHeight);
@@ -99,13 +103,14 @@ function tick(){
     ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.globalAlpha=Math.min(1,p.life/30);
     ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore();
   }
-  if(particles.length)requestAnimationFrame(tick);else{fxRunning=false;ctx.clearRect(0,0,innerWidth,innerHeight);}
+  if(particles.length&&!document.hidden)requestAnimationFrame(tick);
+  else{particles=[];fxRunning=false;fx.classList.remove('on');fx.width=fx.height=0;}
 }
 function centerOf(el){const r=el.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];}
 
 /* ---------- HUD ---------- */
 const levelOf=xp=>Math.floor(xp/XP_LEVEL)+1;
-function rankOf(n){return n===TOTAL?'Bash explorer':n>=18?'Terminal operator':n>=12?'Pipeline engineer':n>=6?'Command explorer':'New explorer';}
+function rankOf(n){return n===TOTAL?'Bash commander':n>=36?'Station chief':n>=24?'Bash explorer':n>=18?'Terminal operator':n>=12?'Pipeline engineer':n>=6?'Command explorer':'New explorer';}
 function badgeCount(){return sectors.filter((_,i)=>lessons.filter(l=>l.chapter===i).every(l=>completed.has(l.id))).length;}
 function stats(){
   const n=completed.size,xp=n*XP_PER;
@@ -121,6 +126,7 @@ function stats(){
 }
 function pop(id){const el=$(id).closest('.stat,.level-badge');el.classList.remove('pop','bump');void el.offsetWidth;el.classList.add(el.classList.contains('level-badge')?'bump':'pop');}
 function floatXP(text){
+  if(calm||reducedMotion)return;
   const [x,y]=centerOf($('xpFill').parentElement);
   const el=document.createElement('div');el.className='xp-float';el.textContent=text;
   el.style.left=x-30+'px';el.style.top=y+10+'px';document.body.append(el);setTimeout(()=>el.remove(),1500);
@@ -136,7 +142,8 @@ function map(){
     const title=document.createElement('div');title.className='chapter-title';
     const icon=document.createElement('span');icon.className='chapter-icon';icon.textContent=count===subset.length?'✓':sector.icon;
     const text=document.createElement('div');const b=document.createElement('b');b.textContent=`${ci+1}. ${sector.name}`;
-    const small=document.createElement('small');small.textContent=count===subset.length?`🏅 ${sector.badge} badge`:sector.story;
+    const locked=!unlocked(subset[0].id);
+    const small=document.createElement('small');small.textContent=count===subset.length?`🏅 ${sector.badge} badge`:locked?`🔒 Restore system ${ci} to unlock`:sector.story;
     text.append(b,small);const counter=document.createElement('span');counter.textContent=`${count}/${subset.length}`;
     title.append(icon,text,counter);
     const path=document.createElement('div');path.className='level-path';
@@ -155,6 +162,18 @@ function map(){
     });
     section.append(title,path);$('chapters').append(section);
   });
+  keepInView($('chapters').querySelector('.active-sector'));
+}
+// Scroll only the mission map's own scroller, never the page.
+function keepInView(el){
+  if(!el)return;
+  for(let box=el.parentElement;box&&box!==document.body;box=box.parentElement){
+    const st=getComputedStyle(box);
+    if(/(auto|scroll)/.test(st.overflowY)&&box.scrollHeight>box.clientHeight){
+      const top=el.offsetTop-box.offsetTop-60;if(top<box.scrollTop||el.offsetTop-box.offsetTop+el.offsetHeight>box.scrollTop+box.clientHeight)box.scrollTop=Math.max(0,top);return;
+    }
+    if(/(auto|scroll)/.test(st.overflowX)&&box.scrollWidth>box.clientWidth){box.scrollLeft=el.offsetLeft-box.offsetLeft-10;return;}
+  }
 }
 
 /* ---------- Terminal output ---------- */
@@ -237,7 +256,7 @@ function showChanges(c){
 /* ---------- Mission flow ---------- */
 function typeStory(text){
   clearInterval(storyTimer);const el=$('story');el.classList.remove('done');
-  if(reducedMotion){el.textContent=text;el.classList.add('done');return;}
+  if(reducedMotion||calm||document.hidden){el.textContent=text;el.classList.add('done');return;}
   let i=0;el.textContent='';
   storyTimer=setInterval(()=>{el.textContent=text.slice(0,++i);if(i>=text.length){clearInterval(storyTimer);setTimeout(()=>el.classList.add('done'),1200);}},18);
 }
@@ -265,7 +284,7 @@ function start({boot=false}={}){
   $('learnMore').open=window.innerHeight>=820||window.innerWidth<1000;
   document.querySelector('.lesson-scroll').scrollTop=0;
   if(boot){
-    for(const t of ['BASH QUEST station OS v3.0 — booting…','[ ok ] life support','[ ok ] simulated filesystem mounted at /','[ ok ] terminal link established'])log(t,'boot');
+    for(const t of ['BASH QUEST station OS v4.0 — booting…','[ ok ] life support','[ ok ] simulated filesystem mounted at /','[ ok ] terminal link established'])log(t,'boot');
   }
   log(free?'# Playground — type help to list commands.':`# Mission ${pad(active+1)}/${TOTAL} — ${l.title}\n# Goal: ${l.task}`,'intro');
   renderTree();stats();map();save();focusCommand();
@@ -387,8 +406,11 @@ $('theme').onclick=()=>{document.body.classList.toggle('light');try{localStorage
 function syncSound(){$('sound').textContent=soundOn?'🔊':'🔇';$('sound').setAttribute('aria-pressed',String(soundOn));}
 $('sound').onclick=()=>{soundOn=!soundOn;syncSound();try{localStorage.setItem('bash-quest-sound',soundOn?'on':'off');}catch{}sound('key');focusCommand();};
 syncSound();
+function syncCalm(){document.body.classList.toggle('calm',calm);$('calm').textContent=calm?'🌙':'✨';$('calm').setAttribute('aria-pressed',String(calm));$('calm').title=calm?'Calm mode on: no animations or confetti (lowest GPU use)':'Effects on — click for calm mode (lowest GPU use)';}
+$('calm').onclick=()=>{calm=!calm;syncCalm();try{localStorage.setItem('bash-quest-calm',calm?'on':'off');}catch{}focusCommand();};
+syncCalm();
 
-const reference=[['pwd','Print the current directory path'],['ls [-a] [-l] [directory]','List files; -a includes hidden entries, -l shows illustrative permissions'],['cd [directory]','Change directory. .. means parent; ~ means home'],['cat [file]','Read a file or input from a pipe'],['mkdir [-p] directory','Create a directory. -p also creates missing parent directories'],['touch file','Create an empty file if it does not exist'],['cp source destination','Copy a file; keep the source'],['mv source destination','Move or rename a file'],['rm file','Delete a file — no recycle bin'],['echo "text"','Print text followed by a newline'],['command > file','Write output to a file; overwrite existing contents'],['command >> file','Append output to a file'],['grep [-i] text [file]','Select lines containing plain text. -i ignores case'],['wc -l [file]','Count newline characters'],['head -n 2 [file]','The first two lines'],['tail -n 2 [file]','The last two lines'],['sort [file]','Sort lines'],['uniq [file]','Remove adjacent duplicate lines'],['command | command','Pass output as input to the next command'],['name=value','Store a value in a variable; no spaces around ='],['echo "$name"','Expand a variable inside double quotes'],["echo '$name'",'Literal text; no variable expansion'],['clear','Clear the terminal; keep the files'],['help','List supported commands'],['Tab','Complete a command, file, or folder name'],['Ctrl+L','Clear the terminal screen']];
+const reference=[['pwd','Print the current directory path'],['ls [-a] [-l] [directory]','List files; -a includes hidden entries, -l shows illustrative permissions'],['cd [directory]','Change directory. .. means parent; ~ means home'],['cat [file]','Read a file or input from a pipe'],['mkdir [-p] directory','Create a directory. -p also creates missing parent directories'],['rmdir directory','Remove an empty directory'],['touch file','Create an empty file if it does not exist'],['cp source destination','Copy a file; keep the source'],['mv source destination','Move or rename a file'],['rm file','Delete a file — no recycle bin'],['echo "text"','Print text followed by a newline'],['command > file','Write output to a file; overwrite existing contents'],['command >> file','Append output to a file'],['grep [-i] [-v] [-c] text [file]','Select lines containing plain text. -i ignores case, -v inverts the match, -c counts matching lines'],['wc -l|-w [file]','Count lines (-l) or words (-w)'],['head -n 2 [file]','The first two lines'],['tail -n 2 [file]','The last two lines'],['sort [-r] [file]','Sort lines; -r reverses the order'],['uniq [-c] [file]','Remove adjacent duplicate lines; -c prefixes each with its count'],['command | command','Pass output as input to the next command'],['name=value','Store a value in a variable; no spaces around ='],['echo "$name"','Expand a variable inside double quotes'],["echo '$name'",'Literal text; no variable expansion'],['clear','Clear the terminal; keep the files'],['help','List supported commands'],['Tab','Complete a command, file, or folder name'],['Ctrl+L','Clear the terminal screen']];
 function guide(){
   const query=$('search').value.toLowerCase();$('guideList').replaceChildren();
   reference.filter(x=>x.join(' ').toLowerCase().includes(query)).forEach(([cmd,desc])=>{
